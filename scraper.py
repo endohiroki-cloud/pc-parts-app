@@ -813,5 +813,6 @@ if __name__ == '__main__':
     print("  💻 Web価格自動取得サーバー")
     print("="*60)
     print("📡 価格.com から自動取得")
-    print("🚀 起動中: http://localhost:5000\n")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    print(f"🚀 起動中: http://localhost:{port}\n")
+    app.run(host='0.0.0.0', port=port, debug=True)
