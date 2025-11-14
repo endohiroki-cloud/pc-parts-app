@@ -6,8 +6,9 @@ import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+import os
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -802,7 +803,7 @@ def search_product():
 @app.route('/')
 def index():
     """メインページを表示"""
-    return render_template('index.html')
+    return send_from_directory('static', 'index.html')
 
 # ==========================
 # 🖥️ サーバー起動
