@@ -736,6 +736,68 @@ def search_product():
 
     return jsonify({'error': '価格.comで価格を取得できませんでした'}), 404
 
+@app.route('/api/suggestions', methods=['POST'])
+def get_suggestions():
+    """カテゴリ別の人気商品サジェストを取得"""
+    data = request.json
+    category = data.get('category', '')
+
+    # カテゴリごとの価格.comカテゴリコード
+    category_codes = {
+        'cpu': '0510',
+        'motherboard': '0540',
+        'memory': '0520',
+        'gpu': '0550',
+        'storage': '0537',
+        'psu': '0590',
+        'case': '0580',
+        'cooler': '0512',
+        'os': '0560'
+    }
+
+    if category not in category_codes:
+        return jsonify({'suggestions': []})
+
+    try:
+        print(f"\n🔍 サジェスト取得: {category}")
+
+        # 価格.comの人気ランキングページから取得
+        category_code = category_codes[category]
+        url = f"https://kakaku.com/pc/category_{category_code}_ranking.html"
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        }
+
+        res = requests.get(url, headers=headers, timeout=10)
+        res.encoding = res.apparent_encoding or 'utf-8'
+        soup = BeautifulSoup(res.text, "html.parser")
+
+        suggestions = []
+
+        # ランキング商品を取得（上位10件）
+        items = soup.select("div.ckitemList_item, tr.item, div.ranking-item")[:10]
+
+        for item in items:
+            # 商品名を取得
+            name_tag = (item.select_one("h3 a") or
+                       item.select_one("p.itemname a") or
+                       item.select_one("a.ckitanker"))
+
+            if name_tag:
+                name = name_tag.get_text(strip=True)
+                # 不要な文字を除去
+                name = name.replace('\n', ' ').replace('  ', ' ').strip()
+                if name and len(name) > 5:  # 短すぎる名前は除外
+                    suggestions.append(name)
+
+        print(f"✅ {len(suggestions)}件のサジェストを取得")
+        return jsonify({'suggestions': suggestions[:8]})  # 最大8件
+
+    except Exception as e:
+        print(f"❌ サジェスト取得失敗: {e}")
+        return jsonify({'suggestions': []})
+
 @app.route('/')
 def index():
     """メインページを表示"""
