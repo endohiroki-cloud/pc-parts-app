@@ -385,43 +385,21 @@
         };
 
         function PCPartsSelector() {
-            // ローカルストレージから初期データを読み込み
-            const loadFromLocalStorage = () => {
-                try {
-                    const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-                    if (savedData) {
-                        return JSON.parse(savedData);
-                    }
-                } catch (e) {
-                    console.error('ローカルストレージからの読み込みエラー:', e);
-                }
-                return {
-                    cpu: { name: '', price: '', socket: '', tdp: '', notes: '', image: '' },
-                    motherboard: { name: '', price: '', socket: '', chipset: '', formFactor: '', notes: '', image: '' },
-                    memory: { name: '', price: '', type: '', speed: '', capacity: '', notes: '', image: '' },
-                    gpu: { name: '', price: '', power: '', notes: '', image: '' },
-                    storage: { name: '', price: '', type: '', capacity: '', notes: '', image: '' },
-                    psu: { name: '', price: '', wattage: '', certification: '', notes: '', image: '' },
-                    case: { name: '', price: '', formFactor: '', notes: '', image: '' },
-                    cooler: { name: '', price: '', type: '', notes: '', image: '' },
-                    os: { name: '', price: '', edition: '', license: '', notes: '', image: '' },
-                };
-            };
-
-            const [parts, setParts] = useState(loadFromLocalStorage);
+            const [parts, setParts] = useState({
+                cpu: { name: '', price: '', socket: '', tdp: '', notes: '', image: '' },
+                motherboard: { name: '', price: '', socket: '', chipset: '', formFactor: '', notes: '', image: '' },
+                memory: { name: '', price: '', type: '', speed: '', capacity: '', notes: '', image: '' },
+                gpu: { name: '', price: '', power: '', notes: '', image: '' },
+                storage: { name: '', price: '', type: '', capacity: '', notes: '', image: '' },
+                psu: { name: '', price: '', wattage: '', certification: '', notes: '', image: '' },
+                case: { name: '', price: '', formFactor: '', notes: '', image: '' },
+                cooler: { name: '', price: '', type: '', notes: '', image: '' },
+                os: { name: '', price: '', edition: '', license: '', notes: '', image: '' },
+            });
 
             const [warnings, setWarnings] = useState([]);
             const [statusMessages, setStatusMessages] = useState({});
             const [autoFilledFields, setAutoFilledFields] = useState({});
-
-            // partsが変更されたらローカルストレージに保存
-            useEffect(() => {
-                try {
-                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(parts));
-                } catch (e) {
-                    console.error('ローカルストレージへの保存エラー:', e);
-                }
-            }, [parts]);
 
             const updatePart = (category, field, value) => {
                 setParts(prev => ({
@@ -866,13 +844,6 @@
 
             const clearAll = () => {
                 if (confirm('すべてのデータをクリアしますか？')) {
-                    // ローカルストレージもクリア
-                    try {
-                        localStorage.removeItem(LOCAL_STORAGE_KEY);
-                    } catch (e) {
-                        console.error('ローカルストレージのクリアエラー:', e);
-                    }
-
                     setParts({
                         cpu: { name: '', price: '', socket: '', tdp: '', notes: '', image: '' },
                         motherboard: { name: '', price: '', socket: '', chipset: '', formFactor: '', notes: '', image: '' },
