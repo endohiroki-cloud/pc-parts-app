@@ -29,70 +29,6 @@ def optimize_search_query(product_name, category):
 
 
 # ==========================
-# 🖼️ 画像取得関数
-# ==========================
-def get_product_image(product_name):
-    """商品名からGoogle画像検索で画像URLを取得（改善版）"""
-    try:
-        print(f"🖼️ Google画像検索で画像を取得中: {product_name}")
-
-        # 検索クエリを最適化（BOX、パッケージなどの余分な単語を削除）
-        clean_name = product_name.replace(" BOX", "").replace(" パッケージ", "").replace(" with ", " ")
-        search_term = quote(clean_name, safe='')
-        url = f"https://www.google.com/search?q={search_term}&tbm=isch"
-
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-            "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
-            "Referer": "https://www.google.com/",
-        }
-
-        res = requests.get(url, headers=headers, timeout=10)
-        res.encoding = res.apparent_encoding or 'utf-8'
-        soup = BeautifulSoup(res.text, "html.parser")
-
-        # 画像のURLを抽出（複数の方法を試行）
-        img_tags = soup.select("img")
-
-        # 除外キーワードリスト
-        skip_keywords = ['logo', 'icon', 'button', 'avatar', '1x1', 'pixel', 'gstatic.com/images/branding']
-
-        for idx, img_tag in enumerate(img_tags):
-            img_url = (img_tag.get("data-src") or
-                      img_tag.get("data-original") or
-                      img_tag.get("src") or "")
-
-            # 有効な画像URLをチェック
-            if img_url and img_url.startswith("http"):
-                # 除外キーワードをチェック
-                if not any(skip in img_url.lower() for skip in skip_keywords):
-                    # 画像サイズをチェック（小さすぎる画像を除外）
-                    width = img_tag.get("width")
-                    height = img_tag.get("height")
-
-                    # サイズ情報がある場合、小さすぎるものは除外
-                    if width and height:
-                        try:
-                            if int(width) < 100 or int(height) < 100:
-                                continue
-                        except:
-                            pass
-
-                    print(f"✅ Google画像検索から画像取得成功 (画像{idx})")
-                    print(f"   URL: {img_url[:80]}...")
-                    return img_url
-
-        print(f"❌ Google画像検索で有効な画像が見つかりませんでした")
-        return ""
-    except Exception as e:
-        print(f"❌ Google画像検索失敗: {e}")
-        import traceback
-        traceback.print_exc()
-        return ""
-
-
-# ==========================
 # 📊 スペック情報の抽出
 # ==========================
 def extract_cpu_specs(product_name):
@@ -588,10 +524,10 @@ def search_kakaku(product_name, category=''):
                 print(f"  ⚠️ プレースホルダー画像を検出: {image_url}")
                 image_url = ""
 
-        # 価格.comで有効な画像が見つからなかった場合、Google画像検索から取得
+        # 画像が見つからなかった場合は"No image"
         if not image_url or not image_url.startswith("http"):
-            print("⚠️ 価格.comで画像が見つからないため、Google画像検索を使用")
-            image_url = get_product_image(name)
+            print("⚠️ 価格.comで画像が見つかりませんでした")
+            image_url = "No image"
         else:
             print(f"✅ 価格.comから画像取得: {image_url[:60]}...")
 
