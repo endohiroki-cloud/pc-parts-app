@@ -738,9 +738,10 @@ def search_product():
 
 @app.route('/api/suggestions', methods=['POST'])
 def get_suggestions():
-    """カテゴリ別の人気商品サジェストを取得"""
+    """入力内容に応じた商品サジェストを取得"""
     data = request.json
     category = data.get('category', '')
+    query = data.get('query', '').strip()
 
     # カテゴリごとの価格.comカテゴリコード
     category_codes = {
@@ -759,43 +760,66 @@ def get_suggestions():
         return jsonify({'suggestions': []})
 
     try:
-        print(f"\n🔍 サジェスト取得: {category}")
-
-        # 価格.comの人気ランキングページから取得
-        category_code = category_codes[category]
-        url = f"https://kakaku.com/pc/category_{category_code}_ranking.html"
-
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        }
-
-        res = requests.get(url, headers=headers, timeout=10)
-        res.encoding = res.apparent_encoding or 'utf-8'
-        soup = BeautifulSoup(res.text, "html.parser")
+        print(f"\n🔍 サジェスト取得: {category} - クエリ: '{query}'")
 
         suggestions = []
 
-        # ランキング商品を取得（上位10件）
-        items = soup.select("div.ckitemList_item, tr.item, div.ranking-item")[:10]
+        if query and len(query) >= 2:
+            # 入力がある場合は検索結果から取得
+            category_code = category_codes[category]
+            search_url = f"https://kakaku.com/search_results/{quote(query)}/?category={category_code}"
 
-        for item in items:
-            # 商品名を取得
-            name_tag = (item.select_one("h3 a") or
-                       item.select_one("p.itemname a") or
-                       item.select_one("a.ckitanker"))
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            }
 
-            if name_tag:
-                name = name_tag.get_text(strip=True)
-                # 不要な文字を除去
+            res = requests.get(search_url, headers=headers, timeout=10)
+            res.encoding = res.apparent_encoding or 'utf-8'
+            soup = BeautifulSoup(res.text, "html.parser")
+
+            # 検索結果から商品名を取得
+            items = soup.select("div.p-item_name a, li.item a")[:10]
+
+            for item in items:
+                name = item.get_text(strip=True)
                 name = name.replace('\n', ' ').replace('  ', ' ').strip()
-                if name and len(name) > 5:  # 短すぎる名前は除外
+                if name and len(name) > 3 and name not in suggestions:
                     suggestions.append(name)
 
+        else:
+            # 入力がない場合は人気ランキングから取得
+            category_code = category_codes[category]
+            url = f"https://kakaku.com/pc/category_{category_code}_ranking.html"
+
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            }
+
+            res = requests.get(url, headers=headers, timeout=10)
+            res.encoding = res.apparent_encoding or 'utf-8'
+            soup = BeautifulSoup(res.text, "html.parser")
+
+            # ランキング商品を取得
+            items = soup.select("div.ckitemList_item, tr.item, div.ranking-item")[:10]
+
+            for item in items:
+                name_tag = (item.select_one("h3 a") or
+                           item.select_one("p.itemname a") or
+                           item.select_one("a.ckitanker"))
+
+                if name_tag:
+                    name = name_tag.get_text(strip=True)
+                    name = name.replace('\n', ' ').replace('  ', ' ').strip()
+                    if name and len(name) > 5:
+                        suggestions.append(name)
+
         print(f"✅ {len(suggestions)}件のサジェストを取得")
-        return jsonify({'suggestions': suggestions[:8]})  # 最大8件
+        return jsonify({'suggestions': suggestions[:8]})
 
     except Exception as e:
         print(f"❌ サジェスト取得失敗: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'suggestions': []})
 
 @app.route('/')

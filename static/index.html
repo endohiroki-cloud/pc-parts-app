@@ -428,13 +428,13 @@
                 return null;
             };
 
-            // サジェストを取得
-            const fetchSuggestions = async (category) => {
+            // サジェストを取得（入力内容に応じて）
+            const fetchSuggestions = async (category, query = '') => {
                 try {
                     const response = await fetch('/api/suggestions', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ category })
+                        body: JSON.stringify({ category, query })
                     });
 
                     if (response.ok) {
@@ -446,11 +446,25 @@
                 }
             };
 
+            // 入力変更時にサジェストを更新
+            const handleInputChange = (category, value) => {
+                updatePart(category, 'name', value);
+
+                // 2文字以上入力されたらサジェストを取得
+                if (value.length >= 2) {
+                    fetchSuggestions(category, value);
+                    setShowSuggestions(prev => ({ ...prev, [category]: true }));
+                } else if (value.length === 0) {
+                    // 空の場合は人気ランキングを表示
+                    fetchSuggestions(category, '');
+                    setShowSuggestions(prev => ({ ...prev, [category]: true }));
+                }
+            };
+
             // 入力フォーカス時にサジェストを表示
             const handleInputFocus = (category) => {
-                if (!suggestions[category] || suggestions[category].length === 0) {
-                    fetchSuggestions(category);
-                }
+                const currentValue = parts[category].name || '';
+                fetchSuggestions(category, currentValue);
                 setShowSuggestions(prev => ({ ...prev, [category]: true }));
             };
 
@@ -916,7 +930,7 @@
                                     type="text"
                                     placeholder={`例: ${fields.namePlaceholder}`}
                                     value={part.name}
-                                    onChange={(e) => updatePart(category, 'name', e.target.value)}
+                                    onChange={(e) => handleInputChange(category, e.target.value)}
                                     onFocus={() => handleInputFocus(category)}
                                     onBlur={() => setTimeout(() => setShowSuggestions(prev => ({ ...prev, [category]: false })), 200)}
                                     onKeyDown={(e) => {
