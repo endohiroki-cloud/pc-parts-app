@@ -3,8 +3,8 @@ import sys
 import io
 
 # Windows コンソールでUTF-8を使用
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+# sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+# sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -760,14 +760,34 @@ def get_suggestions():
         return jsonify({'suggestions': []})
 
     try:
-        print(f"\n🔍 サジェスト取得: {category} - クエリ: '{query}'")
+        print(f"\n[SUGGEST] category={category} query={query}")
 
         suggestions = []
 
         if query and len(query) >= 2:
             # 入力がある場合は検索結果から取得
             category_code = category_codes[category]
+
+            # カテゴリ別のキーワードフィルター（必須キーワード）
+            category_keywords = {
+                'cpu': ['Intel', 'AMD', 'Core', 'Ryzen', 'Processor', 'CPU'],
+                'motherboard': ['ASUS', 'MSI', 'GIGABYTE', 'ASRock', 'Motherboard', 'マザーボード', 'Z790', 'B760', 'X670', 'B650'],
+                'memory': ['DDR4', 'DDR5', 'Memory', 'メモリ', 'RAM', 'GB'],
+                'gpu': ['GeForce', 'Radeon', 'グラフィックボード', 'グラフィック', 'ビデオカード', 'GPU', 'NVIDIA', 'AMD', 'RTX', 'GTX', 'RX', 'Arc'],
+                'storage': ['SSD', 'HDD', 'NVMe', 'SATA', 'M.2', 'ストレージ'],
+                'psu': ['電源', 'PSU', 'Power Supply', '電源ユニット', 'W', '80PLUS'],
+                'case': ['ケース', 'PCケース', 'タワー', 'Tower', 'ミドルタワー'],
+                'cooler': ['CPUクーラー', 'クーラー', '水冷', '空冷', 'ファン'],
+                'os': ['Windows', 'OS', 'オペレーティングシステム']
+            }
+
+            # 除外キーワード（これらが含まれていたら除外）
+            exclude_keywords = {
+                'gpu': ['ウェッジ', 'ゴルフ', 'Golf', 'フレックス', 'ロフト', 'バンス', 'シャフト']
+            }
+
             search_url = f"https://kakaku.com/search_results/{quote(query)}/?category={category_code}"
+            print(f"[DEBUG] Search URL: {search_url}")
 
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
@@ -777,41 +797,73 @@ def get_suggestions():
             res.encoding = res.apparent_encoding or 'utf-8'
             soup = BeautifulSoup(res.text, "html.parser")
 
-            # 検索結果から商品名を取得
-            items = soup.select("div.p-item_name a, li.item a")[:10]
+            # 複数のセレクターを試行
+            items = soup.select("div.p-item_name a")
+            print(f"[DEBUG] p-item_name a: {len(items)}")
+
+            if len(items) == 0:
+                items = soup.select("li.item a")
+                print(f"[DEBUG] li.item a: {len(items)}")
+
+            if len(items) == 0:
+                items = soup.select("a.ckitanker")
+                print(f"[DEBUG] a.ckitanker: {len(items)}")
+
+            if len(items) == 0:
+                # より一般的なセレクター
+                items = soup.select("div[class*='item'] a, td.ckitanker a")
+                print(f"[DEBUG] generic selectors: {len(items)}")
+
+            items = items[:10]
+
+            # カテゴリに関連するキーワードを含む商品のみフィルタリング
+            keywords = category_keywords.get(category, [])
+            excludes = exclude_keywords.get(category, [])
 
             for item in items:
                 name = item.get_text(strip=True)
                 name = name.replace('\n', ' ').replace('  ', ' ').strip()
-                if name and len(name) > 3 and name not in suggestions:
+
+                # 除外キーワードチェック
+                is_excluded = False
+                for exclude in excludes:
+                    if exclude in name:
+                        is_excluded = True
+                        print(f"[DEBUG] Excluded (contains '{exclude}'): {name}")
+                        break
+
+                if is_excluded:
+                    continue
+
+                # PCパーツに関連するキーワードが含まれているかチェック
+                is_relevant = False
+                if keywords:
+                    for keyword in keywords:
+                        if keyword.lower() in name.lower():
+                            is_relevant = True
+                            break
+                else:
+                    is_relevant = True  # キーワードがない場合はすべて許可
+
+                if name and len(name) > 3 and name not in suggestions and is_relevant:
                     suggestions.append(name)
+                    print(f"[DEBUG] Added: {name}")
 
         else:
-            # 入力がない場合は人気ランキングから取得
-            category_code = category_codes[category]
-            url = f"https://kakaku.com/pc/category_{category_code}_ranking.html"
-
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            # 入力がない場合は人気商品の例を返す
+            popular_items = {
+                'cpu': ['Intel Core i9-14900K', 'AMD Ryzen 9 7950X', 'Intel Core i7-14700K', 'AMD Ryzen 7 7800X3D'],
+                'motherboard': ['ASUS ROG MAXIMUS Z790', 'MSI MPG B650 EDGE WIFI', 'ASUS TUF GAMING B760M'],
+                'memory': ['DDR5-6000 32GB', 'DDR4-3200 16GB', 'DDR5-5600 32GB'],
+                'gpu': ['RTX 4090', 'RTX 4080 SUPER', 'RTX 4070 Ti SUPER', 'RX 7900 XTX'],
+                'storage': ['Samsung 990 PRO 2TB', 'WD Blue SN580 1TB', 'Crucial P3 Plus 2TB'],
+                'psu': ['Corsair RM850e 850W', 'Seasonic FOCUS GX-850 850W'],
+                'case': ['NZXT H9 Flow', 'Fractal Design Pop Air RGB'],
+                'cooler': ['Noctua NH-D15', 'DeepCool AK620'],
+                'os': ['Windows 11 Home', 'Windows 11 Pro']
             }
 
-            res = requests.get(url, headers=headers, timeout=10)
-            res.encoding = res.apparent_encoding or 'utf-8'
-            soup = BeautifulSoup(res.text, "html.parser")
-
-            # ランキング商品を取得
-            items = soup.select("div.ckitemList_item, tr.item, div.ranking-item")[:10]
-
-            for item in items:
-                name_tag = (item.select_one("h3 a") or
-                           item.select_one("p.itemname a") or
-                           item.select_one("a.ckitanker"))
-
-                if name_tag:
-                    name = name_tag.get_text(strip=True)
-                    name = name.replace('\n', ' ').replace('  ', ' ').strip()
-                    if name and len(name) > 5:
-                        suggestions.append(name)
+            suggestions = popular_items.get(category, [])
 
         print(f"✅ {len(suggestions)}件のサジェストを取得")
         return jsonify({'suggestions': suggestions[:8]})

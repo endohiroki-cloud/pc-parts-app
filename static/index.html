@@ -431,6 +431,7 @@
             // サジェストを取得（入力内容に応じて）
             const fetchSuggestions = async (category, query = '') => {
                 try {
+                    console.log('サジェスト取得開始:', category, query);
                     const response = await fetch('/api/suggestions', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -439,6 +440,7 @@
 
                     if (response.ok) {
                         const data = await response.json();
+                        console.log('サジェスト取得成功:', data);
                         setSuggestions(prev => ({ ...prev, [category]: data.suggestions || [] }));
                     }
                 } catch (error) {
@@ -463,6 +465,7 @@
 
             // 入力フォーカス時にサジェストを表示
             const handleInputFocus = (category) => {
+                console.log('フォーカス:', category);
                 const currentValue = parts[category].name || '';
                 fetchSuggestions(category, currentValue);
                 setShowSuggestions(prev => ({ ...prev, [category]: true }));
