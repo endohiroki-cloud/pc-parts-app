@@ -3,1300 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自作PCパーツ選定アプリ - 完全版</title>
+    <title>自作PCパーツ選定アプリ</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
-        
-        .content {
-            padding: 30px;
-        }
-        
-        .part-section {
-            margin-bottom: 25px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s ease;
-        }
-        
-        .part-section:hover {
-            border-color: #667eea;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
-        }
-        
-        .part-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .part-icon {
-            font-size: 1.8em;
-            margin-right: 12px;
-        }
-        
-        .part-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .input-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 10px;
-        }
-        
-        .input-field {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .input-field label {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        
-        .input-field input,
-        .input-field select,
-        .input-field textarea {
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: border-color 0.3s;
-        }
-        
-        .input-field input:focus,
-        .input-field select:focus,
-        .input-field textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .input-field textarea {
-            resize: vertical;
-            min-height: 60px;
-        }
-        
-        .btn-auto-search {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.95em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 8px;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-            width: 100%;
-        }
-        
-        .btn-auto-search:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
-        }
-        
-        .btn-auto-search:disabled {
-            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-        
-        .status-message {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            border: 2px solid #2196f3;
-            border-radius: 8px;
-            padding: 12px;
-            margin: 12px 0;
-            font-size: 0.9em;
-            color: #1565c0;
-            animation: slideIn 0.3s ease;
-        }
-        
-        .status-message.success {
-            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-            border-color: #4caf50;
-            color: #2e7d32;
-        }
-        
-        .status-message.error {
-            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
-            border-color: #f44336;
-            color: #c62828;
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .auto-filled {
-            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
-            border-color: #4caf50 !important;
-            animation: fillHighlight 0.5s ease;
-        }
-        
-        @keyframes fillHighlight {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-        
-        .image-preview {
-            margin-top: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #f5f5f5;
-        }
-        
-        .image-preview img {
-            width: 100%;
-            height: 250px;
-            object-fit: contain;
-            display: block;
-            padding: 15px;
-            background: white;
-        }
-        
-        .summary-section {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 12px;
-            padding: 25px;
-            margin-top: 30px;
-        }
-        
-        .summary-header {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .summary-item {
-            display: grid;
-            grid-template-columns: 150px 1fr 120px;
-            gap: 15px;
-            padding: 12px;
-            background: white;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            align-items: center;
-        }
-        
-        .summary-category {
-            font-weight: bold;
-            color: #667eea;
-        }
-        
-        .summary-name {
-            color: #333;
-        }
-        
-        .summary-price {
-            text-align: right;
-            font-weight: bold;
-            color: #2ecc71;
-        }
-        
-        .total-section {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            text-align: right;
-        }
-        
-        .total-label {
-            font-size: 1.3em;
-            color: #333;
-            margin-right: 15px;
-        }
-        
-        .total-amount {
-            font-size: 2em;
-            font-weight: bold;
-            color: #667eea;
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 25px;
-            justify-content: center;
-        }
-        
-        .btn {
-            padding: 15px 40px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-        
-        .btn-secondary {
-            background: #e0e0e0;
-            color: #333;
-        }
-        
-        .btn-secondary:hover {
-            background: #d0d0d0;
-        }
-        
-        .warning {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-            color: #856404;
-        }
-        
-        .warning-title {
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        
-        @media (max-width: 768px) {
-            .input-group {
-                grid-template-columns: 1fr;
-            }
-            
-            .summary-item {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            
-            .summary-price {
-                text-align: left;
-            }
-        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px}
+        .container{max-width:1200px;margin:0 auto;background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+        .header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:30px;text-align:center}
+        .header h1{font-size:2.5em;margin-bottom:10px}
+        .content{padding:30px}
+        .part-section{margin-bottom:25px;border:2px solid #e0e0e0;border-radius:12px;padding:20px;transition:all .3s}
+        .part-section:hover{border-color:#667eea;box-shadow:0 5px 15px rgba(102,126,234,.2)}
+        .part-header{display:flex;align-items:center;margin-bottom:15px}
+        .part-icon{font-size:1.8em;margin-right:12px}
+        .part-title{font-size:1.3em;font-weight:bold;color:#333}
+        .input-group{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:10px}
+        .input-field{display:flex;flex-direction:column}
+        .input-field label{font-size:.9em;color:#666;margin-bottom:5px;font-weight:500}
+        .input-field input,.input-field select,.input-field textarea{padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;transition:border-color .3s}
+        .input-field input:focus,.input-field select:focus,.input-field textarea:focus{outline:none;border-color:#667eea}
+        .input-field textarea{resize:vertical;min-height:60px}
+        .btn-auto-search{background:linear-gradient(135deg,#ff6b6b 0%,#ee5a6f 100%);color:#fff;padding:12px 20px;border:none;border-radius:8px;font-size:.95em;font-weight:bold;cursor:pointer;transition:all .3s;margin-top:8px;box-shadow:0 4px 15px rgba(255,107,107,.3);width:100%}
+        .btn-auto-search:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 25px rgba(255,107,107,.4)}
+        .btn-auto-search:disabled{background:linear-gradient(135deg,#95a5a6 0%,#7f8c8d 100%);cursor:not-allowed;opacity:.7}
+        .status-message{border-radius:8px;padding:12px;margin:12px 0;font-size:.9em;animation:slideIn .3s}
+        .status-message.success{background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 100%);border:2px solid #4caf50;color:#2e7d32}
+        .status-message.error{background:linear-gradient(135deg,#ffebee 0%,#ffcdd2 100%);border:2px solid #f44336;color:#c62828}
+        .status-message.loading{background:linear-gradient(135deg,#e3f2fd 0%,#bbdefb 100%);border:2px solid #2196f3;color:#1565c0}
+        @keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .auto-filled{background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 100%)!important;border-color:#4caf50!important;animation:fillHighlight .5s}
+        @keyframes fillHighlight{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+        .image-preview{margin-top:15px;border:2px solid #e0e0e0;border-radius:8px;overflow:hidden;background:#f5f5f5}
+        .image-preview img{width:100%;height:250px;object-fit:contain;padding:15px;background:#fff}
+        .summary-section{background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);border-radius:12px;padding:25px;margin-top:30px}
+        .summary-header{font-size:1.8em;font-weight:bold;color:#333;margin-bottom:20px;text-align:center}
+        .summary-item{display:grid;grid-template-columns:150px 1fr 120px;gap:15px;padding:12px;background:#fff;border-radius:8px;margin-bottom:10px;align-items:center}
+        .summary-category{font-weight:bold;color:#667eea}
+        .summary-price{text-align:right;font-weight:bold;color:#2ecc71}
+        .total-section{background:#fff;border-radius:8px;padding:20px;margin-top:20px;text-align:right}
+        .total-label{font-size:1.3em;color:#333;margin-right:15px}
+        .total-amount{font-size:2em;font-weight:bold;color:#667eea}
+        .button-group{display:flex;gap:15px;margin-top:25px;justify-content:center}
+        .btn{padding:15px 40px;border:none;border-radius:10px;font-size:1.1em;font-weight:bold;cursor:pointer;transition:all .3s}
+        .btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(102,126,234,.3)}
+        .btn-secondary{background:#e0e0e0;color:#333}
+        .btn-secondary:hover{background:#d0d0d0}
+        .warning{background:#fff3cd;border:2px solid #ffc107;border-radius:8px;padding:15px;margin-top:15px;color:#856404}
+        .warning-title{font-weight:bold;margin-bottom:8px}
+        @media (max-width:768px){.input-group,.summary-item{grid-template-columns:1fr;gap:8px}.summary-price{text-align:left}}
     </style>
 </head>
 <body>
     <div id="root"></div>
-
     <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        // ローカルストレージのキー
-        const LOCAL_STORAGE_KEY = 'pc-parts-data';
-
-        // 価格データベース（主要製品の参考価格 - 2024-2025年時点）
-        const priceDatabase = {
-            // CPU
-            'i7-14700k': { price: '65000', socket: 'LGA1700', tdp: '125' },
-            'i5-14600k': { price: '45000', socket: 'LGA1700', tdp: '125' },
-            'i9-14900k': { price: '88000', socket: 'LGA1700', tdp: '125' },
-            'ryzen 7 7800x3d': { price: '58000', socket: 'AM5', tdp: '120' },
-            'ryzen 9 7950x': { price: '85000', socket: 'AM5', tdp: '170' },
-            'ryzen 5 7600x': { price: '38000', socket: 'AM5', tdp: '105' },
-            
-            // GPU
-            'rtx 4060': { price: '45000', power: '170' },
-            'rtx 4060 ti': { price: '65000', power: '165' },
-            'rtx 4070': { price: '85000', power: '200' },
-            'rtx 4070 ti': { price: '110000', power: '285' },
-            'rtx 4080': { price: '160000', power: '320' },
-            'rtx 4090': { price: '280000', power: '450' },
-            'rx 7800 xt': { price: '75000', power: '263' },
-            'rx 7900 xt': { price: '105000', power: '300' },
-            'rx 7900 xtx': { price: '135000', power: '355' },
-            
-            // マザーボード
-            'z790': { socket: 'LGA1700', chipset: 'Z790' },
-            'b760': { socket: 'LGA1700', chipset: 'B760' },
-            'x670e': { socket: 'AM5', chipset: 'X670E' },
-            'x670': { socket: 'AM5', chipset: 'X670' },
-            'b650': { socket: 'AM5', chipset: 'B650' },
-            
-            // メモリ
-            'ddr5': { type: 'DDR5' },
-            'ddr4': { type: 'DDR4' },
-            
-            // OS
-            'windows 11 home': { edition: 'Home', license: 'DSP版' },
-            'windows 11 pro': { edition: 'Pro', license: 'DSP版' },
+        const {useState,useEffect}=React;
+        const KEY='pc-parts-data';
+        const priceDB={
+            'i7-14700k':{price:'65000',socket:'LGA1700',tdp:'125'},
+            'i5-14600k':{price:'45000',socket:'LGA1700',tdp:'125'},
+            'i9-14900k':{price:'88000',socket:'LGA1700',tdp:'125'},
+            'ryzen 7 7800x3d':{price:'58000',socket:'AM5',tdp:'120'},
+            'ryzen 9 7950x':{price:'85000',socket:'AM5',tdp:'170'},
+            'ryzen 5 7600x':{price:'38000',socket:'AM5',tdp:'105'},
+            'rtx 4060':{price:'45000',power:'170'},
+            'rtx 4060 ti':{price:'65000',power:'165'},
+            'rtx 4070':{price:'85000',power:'200'},
+            'rtx 4070 ti':{price:'110000',power:'285'},
+            'rtx 4080':{price:'160000',power:'320'},
+            'rtx 4090':{price:'280000',power:'450'},
+            'rx 7800 xt':{price:'75000',power:'263'},
+            'rx 7900 xt':{price:'105000',power:'300'},
+            'rx 7900 xtx':{price:'135000',power:'355'}
         };
 
-        function PCPartsSelector() {
-            // ローカルストレージから初期データを読み込み
-            const loadFromLocalStorage = () => {
-                try {
-                    const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-                    if (savedData) {
-                        return JSON.parse(savedData);
-                    }
-                } catch (e) {
-                    console.error('ローカルストレージからの読み込みエラー:', e);
-                }
-                return {
-                    cpu: { name: '', price: '', socket: '', tdp: '', notes: '', image: '' },
-                    motherboard: { name: '', price: '', socket: '', chipset: '', formFactor: '', notes: '', image: '' },
-                    memory: { name: '', price: '', type: '', speed: '', capacity: '', notes: '', image: '' },
-                    gpu: { name: '', price: '', power: '', notes: '', image: '' },
-                    storage: { name: '', price: '', type: '', capacity: '', notes: '', image: '' },
-                    psu: { name: '', price: '', wattage: '', certification: '', notes: '', image: '' },
-                    case: { name: '', price: '', formFactor: '', notes: '', image: '' },
-                    cooler: { name: '', price: '', type: '', notes: '', image: '' },
-                    os: { name: '', price: '', edition: '', license: '', notes: '', image: '' },
-                };
-            };
+        const initParts={
+            cpu:{name:'',price:'',socket:'',tdp:'',notes:'',image:''},
+            motherboard:{name:'',price:'',socket:'',chipset:'',formFactor:'',notes:'',image:''},
+            memory:{name:'',price:'',type:'',speed:'',capacity:'',notes:'',image:''},
+            gpu:{name:'',price:'',power:'',notes:'',image:''},
+            storage:{name:'',price:'',type:'',capacity:'',notes:'',image:''},
+            psu:{name:'',price:'',wattage:'',certification:'',notes:'',image:''},
+            case:{name:'',price:'',formFactor:'',notes:'',image:''},
+            cooler:{name:'',price:'',type:'',notes:'',image:''},
+            os:{name:'',price:'',edition:'',license:'',notes:'',image:''}
+        };
 
-            const [parts, setParts] = useState(loadFromLocalStorage);
+        function PCPartsSelector(){
+            const load=()=>{try{const d=localStorage.getItem(KEY);return d?JSON.parse(d):initParts}catch(e){return initParts}};
+            const [parts,setParts]=useState(load);
+            const [warnings,setWarnings]=useState([]);
+            const [statusMsg,setStatusMsg]=useState({});
+            const [autoFilled,setAutoFilled]=useState({});
 
-            const [warnings, setWarnings] = useState([]);
-            const [statusMessages, setStatusMessages] = useState({});
-            const [autoFilledFields, setAutoFilledFields] = useState({});
+            useEffect(()=>{try{localStorage.setItem(KEY,JSON.stringify(parts))}catch(e){}}, [parts]);
 
-            // partsが変更されたらローカルストレージに保存
-            useEffect(() => {
-                try {
-                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(parts));
-                } catch (e) {
-                    console.error('ローカルストレージへの保存エラー:', e);
-                }
-            }, [parts]);
+            const update=(cat,field,val)=>setParts(p=>({...p,[cat]:{...p[cat],[field]:val}}));
 
-            const updatePart = (category, field, value) => {
-                setParts(prev => ({
-                    ...prev,
-                    [category]: {
-                        ...prev[category],
-                        [field]: value
-                    }
-                }));
-            };
-
-            // 価格.comから価格を検索（シミュレーション）
-            const searchPrice = (productName) => {
-                const lowerName = productName.toLowerCase();
-                
-                // データベースから完全一致または部分一致を探す
-                for (const [key, data] of Object.entries(priceDatabase)) {
-                    if (lowerName.includes(key) || key.includes(lowerName.replace(/\s+/g, ' '))) {
-                        return data;
-                    }
-                }
-                
-                // 見つからない場合はnullを返す（製品名の数字を価格と誤認しない）
+            const searchPrice=name=>{
+                const ln=name.toLowerCase();
+                for(const [k,d] of Object.entries(priceDB))
+                    if(ln.includes(k)||k.includes(ln.replace(/\s+/g,' ')))return d;
                 return null;
             };
 
-            // 自動検索・自動入力
-            const autoSearchAndFill = async (category) => {
-                const productName = parts[category].name;
-                
-                if (!productName || productName.trim().length < 3) {
-                    setStatusMessages(prev => ({
-                        ...prev,
-                        [category]: { type: 'error', text: '製品名を3文字以上入力してください' }
-                    }));
-                    setTimeout(() => {
-                        setStatusMessages(prev => ({ ...prev, [category]: null }));
-                    }, 3000);
+            const extractSpecs=(name,cat)=>{
+                const s={},u=name.toUpperCase();
+                if(cat==='cpu'){
+                    const sm=name.match(/(LGA\d+|AM\d+|AM5)/i);if(sm)s.socket=sm[1].toUpperCase();
+                    const tm=name.match(/(\d+)W|TDP[:\s]*(\d+)/i);if(tm)s.tdp=tm[1]||tm[2];
+                }else if(cat==='motherboard'){
+                    const sm=name.match(/(LGA\d+|AM\d+|AM5)/i);if(sm)s.socket=sm[1].toUpperCase();
+                    const cm=name.match(/(Z\d+|B\d+|H\d+|X\d+)/i);if(cm)s.chipset=cm[1].toUpperCase();
+                    if(u.includes('MINI-ITX')||u.includes('MINI ITX'))s.formFactor='Mini-ITX';
+                    else if(u.includes('MICRO-ATX')||u.includes('M-ATX')||u.includes('MATX'))s.formFactor='Micro-ATX';
+                    else if(u.includes('E-ATX')||u.includes('EATX'))s.formFactor='E-ATX';
+                    else if(u.includes('ATX'))s.formFactor='ATX';
+                }else if(cat==='memory'){
+                    if(u.includes('DDR5'))s.type='DDR5';else if(u.includes('DDR4'))s.type='DDR4';
+                    const sm=name.match(/(\d{4,5})\s*MHz/i);if(sm)s.speed=sm[1]+'MHz';
+                    const cm=name.match(/(\d+)\s*GB/i);if(cm)s.capacity=cm[1]+'GB';
+                }else if(cat==='gpu'){
+                    const pm=name.match(/(\d{2,3})\s*W/i);if(pm)s.power=pm[1];
+                }else if(cat==='storage'){
+                    if(u.includes('NVME')||u.includes('M.2'))s.type='M.2 NVMe SSD';
+                    else if(u.includes('SATA')&&u.includes('SSD'))s.type='SATA SSD';
+                    else if(u.includes('HDD'))s.type='HDD';
+                    else if(u.includes('SSD'))s.type='M.2 NVMe SSD';
+                    const cm=name.match(/(\d+)\s*(TB|GB)/i);if(cm)s.capacity=cm[1]+cm[2].toUpperCase();
+                }else if(cat==='psu'){
+                    const wm=name.match(/(\d{3,4})\s*W/i);if(wm)s.wattage=wm[1];
+                    if(/Titanium/i.test(name))s.certification='80 PLUS Titanium';
+                    else if(/Platinum/i.test(name))s.certification='80 PLUS Platinum';
+                    else if(/Gold/i.test(name))s.certification='80 PLUS Gold';
+                    else if(/Silver/i.test(name))s.certification='80 PLUS Silver';
+                    else if(/Bronze/i.test(name))s.certification='80 PLUS Bronze';
+                }else if(cat==='cooler'){
+                    if(/水冷/.test(name))s.type=/簡易/i.test(name)?'簡易水冷':'本格水冷';
+                    else if(/空冷|air|tower/i.test(name))s.type='空冷';
+                }else if(cat==='os'){
+                    if(/Pro/i.test(name))s.edition='Pro';else if(/Home/i.test(name))s.edition='Home';
+                    if(/DSP|OEM/i.test(name))s.license='DSP版';
+                    else if(/パッケージ|retail/i.test(name))s.license='パッケージ版';
+                    else if(/ダウンロード|download/i.test(name))s.license='ダウンロード版';
+                }
+                return s;
+            };
+
+            const autoSearch=async cat=>{
+                const name=parts[cat].name;
+                if(!name||name.trim().length<3){
+                    setStatusMsg(p=>({...p,[cat]:{type:'error',text:'製品名を3文字以上入力してください'}}));
+                    setTimeout(()=>setStatusMsg(p=>({...p,[cat]:null})),3000);
                     return;
                 }
+                setStatusMsg(p=>({...p,[cat]:{type:'loading',text:'🔍 価格.comから最安値を自動取得中...'}}));
 
-                // 検索中メッセージ
-                setStatusMessages(prev => ({
-                    ...prev,
-                    [category]: { type: 'loading', text: '🔍 価格.comから最安値を自動取得中...' }
-                }));
-
-                // バックエンドAPIから実際の価格を取得
-                try {
-                    const response = await fetch('http://localhost:5000/api/search', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            productName: productName,
-                            category: category
-                        })
+                try{
+                    const res=await fetch('http://localhost:5000/api/search',{
+                        method:'POST',
+                        headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({productName:name,category:cat})
                     });
+                    let api=res.ok?await res.json():{};
+                    const pd=searchPrice(name);
+                    const es=extractSpecs(name,cat);
+                    const upd=[];
 
-                    let apiData = {};
-                    if (response.ok) {
-                        apiData = await response.json();
-                        console.log('価格.comから取得:', apiData);
+                    if(api.price){update(cat,'price',api.price);upd.push('price');}
+                    else if(pd?.price){update(cat,'price',pd.price);upd.push('price');}
+
+                    ['socket','chipset','formFactor','type','speed','capacity','power','wattage','certification','tdp','edition','license']
+                        .forEach(f=>{if(api[f]){update(cat,f,api[f]);if(!upd.includes(f))upd.push(f);}});
+
+                    if(pd)Object.entries(pd).forEach(([f,v])=>{if(f!=='price'&&v){update(cat,f,v);if(!upd.includes(f))upd.push(f);}});
+                    Object.entries(es).forEach(([f,v])=>{if(v){update(cat,f,v);if(!upd.includes(f))upd.push(f);}});
+
+                    if(api.image){update(cat,'image',api.image);upd.push('image');}
+                    else if(!parts[cat].image){
+                        const imgs={cpu:'https://via.placeholder.com/400x300/667eea/ffffff?text=CPU',
+                            motherboard:'https://via.placeholder.com/400x300/764ba2/ffffff?text=Motherboard',
+                            memory:'https://via.placeholder.com/400x300/2ecc71/ffffff?text=RAM',
+                            gpu:'https://via.placeholder.com/400x300/e74c3c/ffffff?text=GPU',
+                            storage:'https://via.placeholder.com/400x300/3498db/ffffff?text=Storage',
+                            psu:'https://via.placeholder.com/400x300/f39c12/ffffff?text=PSU',
+                            case:'https://via.placeholder.com/400x300/9b59b6/ffffff?text=Case',
+                            cooler:'https://via.placeholder.com/400x300/1abc9c/ffffff?text=Cooler',
+                            os:'https://via.placeholder.com/400x300/3498db/ffffff?text=Windows'};
+                        update(cat,'image',imgs[cat]);upd.push('image');
                     }
 
-                    // 価格データベースから検索（フォールバック）
-                    const priceData = searchPrice(productName);
-                    
-                    // 製品名からスペックを抽出
-                    const extractedSpecs = extractSpecsFromName(productName, category);
-                    
-                    const fieldsUpdated = [];
-
-                    // API優先で価格を取得（既存データも上書き）
-                    if (apiData.price) {
-                        updatePart(category, 'price', apiData.price);
-                        fieldsUpdated.push('price');
-                        console.log('価格.comから価格取得成功:', apiData.price);
-                    } else if (priceData && priceData.price) {
-                        updatePart(category, 'price', priceData.price);
-                        fieldsUpdated.push('price');
-                    }
-
-                    // APIから全てのスペック情報を取得
-                    const specFields = ['socket', 'chipset', 'formFactor', 'type', 'speed', 'capacity',
-                                       'power', 'wattage', 'certification', 'tdp', 'edition', 'license'];
-
-                    specFields.forEach(field => {
-                        if (apiData[field]) {
-                            updatePart(category, field, apiData[field]);
-                            if (!fieldsUpdated.includes(field)) {
-                                fieldsUpdated.push(field);
-                            }
-                            console.log(`${field}取得:`, apiData[field]);
-                        }
-                    });
-
-                    // 価格データから入力（既存データも上書き）
-                    if (priceData) {
-                        Object.entries(priceData).forEach(([field, value]) => {
-                            if (field !== 'price' && value) {
-                                updatePart(category, field, value);
-                                if (!fieldsUpdated.includes(field)) {
-                                    fieldsUpdated.push(field);
-                                }
-                            }
-                        });
-                    }
-
-                    // 抽出したスペックから入力（既存データも上書き）
-                    Object.entries(extractedSpecs).forEach(([field, value]) => {
-                        if (value) {
-                            updatePart(category, field, value);
-                            if (!fieldsUpdated.includes(field)) {
-                                fieldsUpdated.push(field);
-                            }
-                        }
-                    });
-
-                    // APIから画像を取得（既存データも上書き）
-                    if (apiData.image) {
-                        updatePart(category, 'image', apiData.image);
-                        fieldsUpdated.push('image');
-                    } else if (!parts[category].image) {
-                        // サンプル画像
-                        const imageUrls = {
-                            cpu: 'https://via.placeholder.com/400x300/667eea/ffffff?text=CPU',
-                            motherboard: 'https://via.placeholder.com/400x300/764ba2/ffffff?text=Motherboard',
-                            memory: 'https://via.placeholder.com/400x300/2ecc71/ffffff?text=RAM',
-                            gpu: 'https://via.placeholder.com/400x300/e74c3c/ffffff?text=GPU',
-                            storage: 'https://via.placeholder.com/400x300/3498db/ffffff?text=Storage',
-                            psu: 'https://via.placeholder.com/400x300/f39c12/ffffff?text=PSU',
-                            case: 'https://via.placeholder.com/400x300/9b59b6/ffffff?text=Case',
-                            cooler: 'https://via.placeholder.com/400x300/1abc9c/ffffff?text=Cooler',
-                            os: 'https://via.placeholder.com/400x300/3498db/ffffff?text=Windows'
-                        };
-                        updatePart(category, 'image', imageUrls[category]);
-                        fieldsUpdated.push('image');
-                    }
-
-                    // ハイライト表示
-                    if (fieldsUpdated.length > 0) {
-                        setAutoFilledFields(prev => ({
-                            ...prev,
-                            [category]: fieldsUpdated
-                        }));
-                        
-                        setTimeout(() => {
-                            setAutoFilledFields(prev => ({
-                                ...prev,
-                                [category]: []
-                            }));
-                        }, 3000);
-                        
-                        const hasPriceData = fieldsUpdated.includes('price');
-                        const source = apiData.source || 'データベース';
-                        const confidence = apiData.confidence;
-                        
-                        let priceMessage = '';
-                        if (hasPriceData) {
-                            const priceValue = parts[category].price || apiData.price;
-                            if (source === 'AI推定') {
-                                const confidenceEmoji = confidence === 'high' ? '🎯' : confidence === 'medium' ? '🤔' : '💭';
-                                priceMessage = `${confidenceEmoji} AI推定価格￥${priceValue}を含む${fieldsUpdated.length}個の項目を自動取得しました！`;
-                                if (apiData.reasoning) {
-                                    priceMessage += `\n💡 ${apiData.reasoning}`;
-                                }
-                            } else {
-                                priceMessage = `✅ ${source}から最安値￥${priceValue}を含む${fieldsUpdated.length}個の項目を自動取得しました！`;
-                            }
-                        } else {
-                            priceMessage = `✅ ${fieldsUpdated.length}個のスペック項目を自動入力しました。`;
-                        }
-                        
-                        setStatusMessages(prev => ({
-                            ...prev,
-                            [category]: { 
-                                type: 'success', 
-                                text: priceMessage
-                            }
-                        }));
-                    } else {
-                        setStatusMessages(prev => ({
-                            ...prev,
-                            [category]: { 
-                                type: 'error', 
-                                text: '💡 価格.comで商品が見つかりませんでした。開いたページで商品情報を確認し、手動で入力してください。' 
-                            }
-                        }));
-                    }
-
-                    setTimeout(() => {
-                        setStatusMessages(prev => ({ ...prev, [category]: null }));
-                    }, 8000);
-                    
-                } catch (error) {
-                    console.error('自動取得エラー:', error);
-                    
-                    // エラー時もフォールバック処理（既存データも上書き）
-                    const priceData = searchPrice(productName);
-                    const extractedSpecs = extractSpecsFromName(productName, category);
-                    const fieldsUpdated = [];
-
-                    if (priceData) {
-                        Object.entries(priceData).forEach(([field, value]) => {
-                            if (value) {
-                                updatePart(category, field, value);
-                                fieldsUpdated.push(field);
-                            }
-                        });
-                    }
-
-                    Object.entries(extractedSpecs).forEach(([field, value]) => {
-                        if (value) {
-                            updatePart(category, field, value);
-                            if (!fieldsUpdated.includes(field)) {
-                                fieldsUpdated.push(field);
-                            }
-                        }
-                    });
-                    
-                    if (fieldsUpdated.length > 0) {
-                        setAutoFilledFields(prev => ({
-                            ...prev,
-                            [category]: fieldsUpdated
-                        }));
-                        
-                        setTimeout(() => {
-                            setAutoFilledFields(prev => ({
-                                ...prev,
-                                [category]: []
-                            }));
-                        }, 3000);
-                    }
-                    
-                    setStatusMessages(prev => ({
-                        ...prev,
-                        [category]: { 
-                            type: 'error', 
-                            text: '⚠️ 自動取得サーバーに接続できませんでした。価格.comのページで情報を確認し、手動で入力してください。' 
-                        }
-                    }));
-                    
-                    setTimeout(() => {
-                        setStatusMessages(prev => ({ ...prev, [category]: null }));
-                    }, 8000);
+                    if(upd.length>0){
+                        setAutoFilled(p=>({...p,[cat]:upd}));
+                        setTimeout(()=>setAutoFilled(p=>({...p,[cat]:[]})),3000);
+                        const msg=upd.includes('price')?
+                            `✅ ${api.source||'データベース'}から最安値￥${parts[cat].price||api.price}を含む${upd.length}個の項目を自動取得しました！`:
+                            `✅ ${upd.length}個のスペック項目を自動入力しました。`;
+                        setStatusMsg(p=>({...p,[cat]:{type:'success',text:msg}}));
+                    }else setStatusMsg(p=>({...p,[cat]:{type:'error',text:'💡 価格.comで商品が見つかりませんでした。'}}));
+                    setTimeout(()=>setStatusMsg(p=>({...p,[cat]:null})),8000);
+                }catch(err){
+                    const pd=searchPrice(name);
+                    const es=extractSpecs(name,cat);
+                    const upd=[];
+                    if(pd)Object.entries(pd).forEach(([f,v])=>{if(v){update(cat,f,v);upd.push(f);}});
+                    Object.entries(es).forEach(([f,v])=>{if(v){update(cat,f,v);if(!upd.includes(f))upd.push(f);}});
+                    if(upd.length>0){setAutoFilled(p=>({...p,[cat]:upd}));setTimeout(()=>setAutoFilled(p=>({...p,[cat]:[]})),3000);}
+                    setStatusMsg(p=>({...p,[cat]:{type:'error',text:'⚠️ 自動取得サーバーに接続できませんでした。'}}));
+                    setTimeout(()=>setStatusMsg(p=>({...p,[cat]:null})),8000);
                 }
             };
 
-            const extractSpecsFromName = (productName, category) => {
-                const specs = {};
-                const upperName = productName.toUpperCase();
-                
-                if (category === 'cpu') {
-                    const socketMatch = productName.match(/(LGA\d+|AM\d+|AM5|TR\d+)/i);
-                    if (socketMatch) specs.socket = socketMatch[1].toUpperCase();
-                    
-                    const tdpMatch = productName.match(/(\d+)W|TDP[:\s]*(\d+)/i);
-                    if (tdpMatch) specs.tdp = tdpMatch[1] || tdpMatch[2];
+            const calcTotal=()=>Object.values(parts).reduce((s,p)=>s+(parseFloat(p.price)||0),0);
+
+            const checkCompat=()=>{
+                const w=[];
+                if(parts.cpu.socket&&parts.motherboard.socket&&parts.cpu.socket!==parts.motherboard.socket)
+                    w.push('⚠️ CPUとマザーボードのソケットが一致しません');
+                if(parts.case.formFactor&&parts.motherboard.formFactor){
+                    const cs=parts.case.formFactor.toLowerCase(),ms=parts.motherboard.formFactor.toLowerCase();
+                    if(cs.includes('mini')&&!ms.includes('mini')&&!ms.includes('micro'))
+                        w.push('⚠️ ケースのサイズに対してマザーボードが大きすぎる可能性があります');
                 }
-                else if (category === 'motherboard') {
-                    const socketMatch = productName.match(/(LGA\d+|AM\d+|AM5|TR\d+)/i);
-                    if (socketMatch) specs.socket = socketMatch[1].toUpperCase();
-                    
-                    const chipsetMatch = productName.match(/(Z\d+|B\d+|H\d+|X\d+)/i);
-                    if (chipsetMatch) specs.chipset = chipsetMatch[1].toUpperCase();
-                    
-                    if (upperName.includes('MINI-ITX') || upperName.includes('MINI ITX')) {
-                        specs.formFactor = 'Mini-ITX';
-                    } else if (upperName.includes('MICRO-ATX') || upperName.includes('M-ATX') || upperName.includes('MATX')) {
-                        specs.formFactor = 'Micro-ATX';
-                    } else if (upperName.includes('E-ATX') || upperName.includes('EATX')) {
-                        specs.formFactor = 'E-ATX';
-                    } else if (upperName.includes('ATX')) {
-                        specs.formFactor = 'ATX';
-                    }
-                }
-                else if (category === 'memory') {
-                    if (upperName.includes('DDR5')) specs.type = 'DDR5';
-                    else if (upperName.includes('DDR4')) specs.type = 'DDR4';
-                    
-                    const speedMatch = productName.match(/(\d{4,5})\s*MHz/i);
-                    if (speedMatch) specs.speed = speedMatch[1] + 'MHz';
-                    
-                    const capacityMatch = productName.match(/(\d+)\s*GB/i);
-                    if (capacityMatch) specs.capacity = capacityMatch[1] + 'GB';
-                }
-                else if (category === 'gpu') {
-                    const powerMatch = productName.match(/(\d{2,3})\s*W/i);
-                    if (powerMatch) specs.power = powerMatch[1];
-                }
-                else if (category === 'storage') {
-                    if (upperName.includes('NVME') || upperName.includes('M.2')) {
-                        specs.type = 'M.2 NVMe SSD';
-                    } else if (upperName.includes('SATA') && upperName.includes('SSD')) {
-                        specs.type = 'SATA SSD';
-                    } else if (upperName.includes('HDD')) {
-                        specs.type = 'HDD';
-                    } else if (upperName.includes('SSD')) {
-                        specs.type = 'M.2 NVMe SSD';
-                    }
-                    
-                    const capacityMatch = productName.match(/(\d+)\s*(TB|GB)/i);
-                    if (capacityMatch) {
-                        specs.capacity = capacityMatch[1] + capacityMatch[2].toUpperCase();
-                    }
-                }
-                else if (category === 'psu') {
-                    const wattageMatch = productName.match(/(\d{3,4})\s*W/i);
-                    if (wattageMatch) specs.wattage = wattageMatch[1];
-                    
-                    if (productName.match(/Titanium/i)) specs.certification = '80 PLUS Titanium';
-                    else if (productName.match(/Platinum/i)) specs.certification = '80 PLUS Platinum';
-                    else if (productName.match(/Gold/i)) specs.certification = '80 PLUS Gold';
-                    else if (productName.match(/Silver/i)) specs.certification = '80 PLUS Silver';
-                    else if (productName.match(/Bronze/i)) specs.certification = '80 PLUS Bronze';
-                }
-                else if (category === 'cooler') {
-                    if (productName.match(/水冷/)) {
-                        specs.type = productName.match(/簡易/i) ? '簡易水冷' : '本格水冷';
-                    } else if (productName.match(/空冷/i) || productName.match(/air|tower/i)) {
-                        specs.type = '空冷';
-                    }
-                }
-                else if (category === 'os') {
-                    // Windows版判定
-                    if (productName.match(/Pro/i)) {
-                        specs.edition = 'Pro';
-                    } else if (productName.match(/Home/i)) {
-                        specs.edition = 'Home';
-                    }
-                    
-                    // ライセンス種類
-                    if (productName.match(/DSP|OEM/i)) {
-                        specs.license = 'DSP版';
-                    } else if (productName.match(/パッケージ|retail/i)) {
-                        specs.license = 'パッケージ版';
-                    } else if (productName.match(/ダウンロード|download/i)) {
-                        specs.license = 'ダウンロード版';
-                    }
-                }
-                
-                return specs;
+                const tdp=parseFloat(parts.cpu.tdp)||0,gpu=parseFloat(parts.gpu.power)||0,psu=parseFloat(parts.psu.wattage)||0;
+                const est=tdp+gpu+150;
+                if(psu>0&&est>psu*.8)w.push(`⚠️ 電源容量が不足する可能性があります（推定: ${est}W）`);
+                setWarnings(w);
             };
 
-            const calculateTotal = () => {
-                return Object.values(parts).reduce((sum, part) => {
-                    const price = parseFloat(part.price) || 0;
-                    return sum + price;
-                }, 0);
-            };
+            useEffect(()=>checkCompat(),[parts]);
 
-            const checkCompatibility = () => {
-                const newWarnings = [];
-
-                if (parts.cpu.socket && parts.motherboard.socket && 
-                    parts.cpu.socket !== parts.motherboard.socket) {
-                    newWarnings.push('⚠️ CPUとマザーボードのソケットが一致しません');
-                }
-
-                if (parts.case.formFactor && parts.motherboard.formFactor) {
-                    const caseSize = parts.case.formFactor.toLowerCase();
-                    const mbSize = parts.motherboard.formFactor.toLowerCase();
-                    if (caseSize.includes('mini') && !mbSize.includes('mini') && !mbSize.includes('micro')) {
-                        newWarnings.push('⚠️ ケースのサイズに対してマザーボードが大きすぎる可能性があります');
-                    }
-                }
-
-                const cpuTdp = parseFloat(parts.cpu.tdp) || 0;
-                const gpuPower = parseFloat(parts.gpu.power) || 0;
-                const psuWattage = parseFloat(parts.psu.wattage) || 0;
-                const estimatedPower = cpuTdp + gpuPower + 150;
-
-                if (psuWattage > 0 && estimatedPower > psuWattage * 0.8) {
-                    newWarnings.push(`⚠️ 電源容量が不足する可能性があります（推定消費電力: ${estimatedPower}W）`);
-                }
-
-                setWarnings(newWarnings);
-            };
-
-            useEffect(() => {
-                checkCompatibility();
-            }, [parts]);
-
-            const exportToText = () => {
-                let text = '=== 自作PCパーツリスト ===\n\n';
-                
-                const categories = {
-                    cpu: 'CPU',
-                    motherboard: 'マザーボード',
-                    memory: 'メモリ',
-                    gpu: 'グラフィックボード',
-                    storage: 'ストレージ',
-                    psu: '電源ユニット',
-                    case: 'PCケース',
-                    cooler: 'CPUクーラー',
-                    os: 'OS'
-                };
-
-                Object.entries(categories).forEach(([key, label]) => {
-                    const part = parts[key];
-                    if (part.name) {
-                        text += `【${label}】\n`;
-                        text += `　製品名: ${part.name}\n`;
-                        if (part.price) text += `　価格: ¥${parseFloat(part.price).toLocaleString()}\n`;
-                        
-                        if (key === 'cpu' && part.socket) text += `　ソケット: ${part.socket}\n`;
-                        if (key === 'cpu' && part.tdp) text += `　TDP: ${part.tdp}W\n`;
-                        if (key === 'motherboard' && part.socket) text += `　ソケット: ${part.socket}\n`;
-                        if (key === 'motherboard' && part.chipset) text += `　チップセット: ${part.chipset}\n`;
-                        if (key === 'memory' && part.type) text += `　タイプ: ${part.type}\n`;
-                        if (key === 'memory' && part.capacity) text += `　容量: ${part.capacity}\n`;
-                        if (key === 'gpu' && part.power) text += `　消費電力: ${part.power}W\n`;
-                        if (key === 'psu' && part.wattage) text += `　容量: ${part.wattage}W\n`;
-                        if (key === 'os' && part.edition) text += `　エディション: ${part.edition}\n`;
-                        if (key === 'os' && part.license) text += `　ライセンス: ${part.license}\n`;
-                        
-                        if (part.image) text += `　画像URL: ${part.image}\n`;
-                        if (part.notes) text += `　メモ: ${part.notes}\n`;
-                        text += '\n';
+            const exportTxt=()=>{
+                let t='=== 自作PCパーツリスト ===\n\n';
+                const cats={cpu:'CPU',motherboard:'マザーボード',memory:'メモリ',gpu:'グラフィックボード',
+                    storage:'ストレージ',psu:'電源ユニット',case:'PCケース',cooler:'CPUクーラー',os:'OS'};
+                Object.entries(cats).forEach(([k,l])=>{
+                    const p=parts[k];
+                    if(p.name){
+                        t+=`【${l}】\n　製品名: ${p.name}\n`;
+                        if(p.price)t+=`　価格: ¥${parseFloat(p.price).toLocaleString()}\n`;
+                        if(k==='cpu'&&p.socket)t+=`　ソケット: ${p.socket}\n`;
+                        if(k==='cpu'&&p.tdp)t+=`　TDP: ${p.tdp}W\n`;
+                        if(k==='motherboard'&&p.socket)t+=`　ソケット: ${p.socket}\n`;
+                        if(k==='motherboard'&&p.chipset)t+=`　チップセット: ${p.chipset}\n`;
+                        if(k==='memory'&&p.type)t+=`　タイプ: ${p.type}\n`;
+                        if(k==='memory'&&p.capacity)t+=`　容量: ${p.capacity}\n`;
+                        if(k==='gpu'&&p.power)t+=`　消費電力: ${p.power}W\n`;
+                        if(k==='psu'&&p.wattage)t+=`　容量: ${p.wattage}W\n`;
+                        if(k==='os'&&p.edition)t+=`　エディション: ${p.edition}\n`;
+                        if(k==='os'&&p.license)t+=`　ライセンス: ${p.license}\n`;
+                        if(p.image)t+=`　画像URL: ${p.image}\n`;
+                        if(p.notes)t+=`　メモ: ${p.notes}\n`;
+                        t+='\n';
                     }
                 });
-
-                text += `\n合計金額: ¥${calculateTotal().toLocaleString()}\n`;
-
-                if (warnings.length > 0) {
-                    text += '\n【互換性の警告】\n';
-                    warnings.forEach(warning => {
-                        text += `${warning}\n`;
-                    });
-                }
-
-                const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'pc-parts-list.txt';
-                a.click();
-                URL.revokeObjectURL(url);
+                t+=`\n合計金額: ¥${calcTotal().toLocaleString()}\n`;
+                if(warnings.length>0){t+='\n【互換性の警告】\n';warnings.forEach(w=>t+=`${w}\n`);}
+                const b=new Blob([t],{type:'text/plain;charset=utf-8'});
+                const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='pc-parts-list.txt';a.click();
             };
 
-            const clearAll = () => {
-                if (confirm('すべてのデータをクリアしますか？')) {
-                    // ローカルストレージもクリア
-                    try {
-                        localStorage.removeItem(LOCAL_STORAGE_KEY);
-                    } catch (e) {
-                        console.error('ローカルストレージのクリアエラー:', e);
-                    }
-
-                    setParts({
-                        cpu: { name: '', price: '', socket: '', tdp: '', notes: '', image: '' },
-                        motherboard: { name: '', price: '', socket: '', chipset: '', formFactor: '', notes: '', image: '' },
-                        memory: { name: '', price: '', type: '', speed: '', capacity: '', notes: '', image: '' },
-                        gpu: { name: '', price: '', power: '', notes: '', image: '' },
-                        storage: { name: '', price: '', type: '', capacity: '', notes: '', image: '' },
-                        psu: { name: '', price: '', wattage: '', certification: '', notes: '', image: '' },
-                        case: { name: '', price: '', formFactor: '', notes: '', image: '' },
-                        cooler: { name: '', price: '', type: '', notes: '', image: '' },
-                        os: { name: '', price: '', edition: '', license: '', notes: '', image: '' },
-                    });
-                    setStatusMessages({});
-                    setAutoFilledFields({});
+            const clearAll=()=>{
+                if(confirm('すべてのデータをクリアしますか？')){
+                    try{localStorage.removeItem(KEY)}catch(e){}
+                    setParts(initParts);setStatusMsg({});setAutoFilled({});
                 }
             };
 
-            const isFieldAutoFilled = (category, field) => {
-                return autoFilledFields[category]?.includes(field);
-            };
+            const isFilled=(cat,f)=>autoFilled[cat]?.includes(f);
 
-            const renderPartSection = (category, icon, title, fields) => {
-                const part = parts[category];
-                const status = statusMessages[category];
-                
-                return (
+            const renderPart=(cat,icon,title,{namePlaceholder,extraFields})=>{
+                const p=parts[cat],st=statusMsg[cat];
+                return(
                     <div className="part-section">
-                        <div className="part-header">
-                            <span className="part-icon">{icon}</span>
-                            <span className="part-title">{title}</span>
-                        </div>
-                        
+                        <div className="part-header"><span className="part-icon">{icon}</span><span className="part-title">{title}</span></div>
                         <div className="input-group">
                             <div className="input-field">
                                 <label>製品名・型番</label>
-                                <input
-                                    type="text"
-                                    placeholder={`例: ${fields.namePlaceholder}`}
-                                    value={part.name}
-                                    onChange={(e) => updatePart(category, 'name', e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && status?.type !== 'loading') {
-                                            autoSearchAndFill(category);
-                                        }
-                                    }}
-                                />
-                                <button
-                                    className="btn-auto-search"
-                                    onClick={() => autoSearchAndFill(category)}
-                                    disabled={status?.type === 'loading'}
-                                >
-                                    {status?.type === 'loading' ? '🔍 検索中...' : '🏷️ 価格.com検索＆自動入力'}
+                                <input type="text" placeholder={`例: ${namePlaceholder}`} value={p.name}
+                                    onChange={e=>update(cat,'name',e.target.value)}
+                                    onKeyDown={e=>{if(e.key==='Enter'&&st?.type!=='loading')autoSearch(cat)}}/>
+                                <button className="btn-auto-search" onClick={()=>autoSearch(cat)} disabled={st?.type==='loading'}>
+                                    {st?.type==='loading'?'🔍 検索中...':'🏷️ 価格.com検索＆自動入力'}
                                 </button>
                             </div>
-                            
                             <div className="input-field">
                                 <label>価格（円）</label>
-                                <input
-                                    type="text"
-                                    placeholder="価格.comから自動取得されます"
-                                    value={part.price ? `¥${parseFloat(part.price).toLocaleString()}` : ''}
-                                    readOnly
-                                    className={isFieldAutoFilled(category, 'price') ? 'auto-filled' : ''}
-                                    style={{cursor: 'default', backgroundColor: '#f5f5f5'}}
-                                />
+                                <input type="text" placeholder="価格.comから自動取得" value={p.price?`¥${parseFloat(p.price).toLocaleString()}`:''}
+                                    readOnly className={isFilled(cat,'price')?'auto-filled':''} style={{cursor:'default',backgroundColor:'#f5f5f5'}}/>
                             </div>
-                            
-                            {fields.extraFields && fields.extraFields(part, updatePart, category, isFieldAutoFilled)}
+                            {extraFields&&extraFields(p,update,cat,isFilled)}
                         </div>
-                        
-                        {status && (
-                            <div className={`status-message ${status.type}`}>
-                                {status.text}
-                            </div>
-                        )}
-
-                        {part.image && (
-                            <div className="image-preview">
-                                <img
-                                    src={part.image}
-                                    alt={part.name || title}
-                                    onError={(e) => {
-                                        e.target.style.display = 'none';
-                                        e.target.parentElement.innerHTML = '<div style="padding: 50px; text-align: center; color: #999;">画像を読み込めませんでした</div>';
-                                    }}
-                                />
-                            </div>
-                        )}
-
-                        <div className="input-field" style={{marginTop: '10px'}}>
+                        {st&&<div className={`status-message ${st.type}`}>{st.text}</div>}
+                        {p.image&&<div className="image-preview"><img src={p.image} alt={p.name||title}
+                            onError={e=>{e.target.style.display='none';e.target.parentElement.innerHTML='<div style="padding:50px;text-align:center;color:#999">画像を読み込めませんでした</div>';}}/></div>}
+                        <div className="input-field" style={{marginTop:'10px'}}>
                             <label>メモ</label>
-                            <textarea 
-                                placeholder="備考やURL等"
-                                value={part.notes}
-                                onChange={(e) => updatePart(category, 'notes', e.target.value)}
-                            />
+                            <textarea placeholder="備考やURL等" value={p.notes} onChange={e=>update(cat,'notes',e.target.value)}/>
                         </div>
                     </div>
                 );
             };
 
-            return (
+            const partConfigs=[
+                ['cpu','🔲','CPU',{namePlaceholder:'Core i7-14700K',extraFields:(p,u,c,f)=>(
+                    <><div className="input-field"><label>ソケット</label><input type="text" placeholder="自動入力" value={p.socket} onChange={e=>u(c,'socket',e.target.value)} className={f(c,'socket')?'auto-filled':''}/></div>
+                    <div className="input-field"><label>TDP（W）</label><input type="number" placeholder="自動入力" value={p.tdp} onChange={e=>u(c,'tdp',e.target.value)} className={f(c,'tdp')?'auto-filled':''}/></div></>
+                )}],
+                ['motherboard','🔌','マザーボード',{namePlaceholder:'ASUS ROG STRIX Z790-E ATX',extraFields:(p,u,c,f)=>(
+                    <><div className="input-field"><label>ソケット</label><input type="text" placeholder="自動入力" value={p.socket} onChange={e=>u(c,'socket',e.target.value)} className={f(c,'socket')?'auto-filled':''}/></div>
+                    <div className="input-field"><label>チップセット</label><input type="text" placeholder="自動入力" value={p.chipset} onChange={e=>u(c,'chipset',e.target.value)} className={f(c,'chipset')?'auto-filled':''}/></div>
+                    <div className="input-field"><label>フォームファクター</label><select value={p.formFactor} onChange={e=>u(c,'formFactor',e.target.value)} className={f(c,'formFactor')?'auto-filled':''}>
+                        <option value="">選択</option><option value="ATX">ATX</option><option value="Micro-ATX">Micro-ATX</option><option value="Mini-ITX">Mini-ITX</option><option value="E-ATX">E-ATX</option></select></div></>
+                )}],
+                ['memory','💾','メモリ',{namePlaceholder:'Corsair Vengeance DDR5 32GB 6000MHz',extraFields:(p,u,c,f)=>(
+                    <><div className="input-field"><label>タイプ</label><select value={p.type} onChange={e=>u(c,'type',e.target.value)} className={f(c,'type')?'auto-filled':''}>
+                        <option value="">選択</option><option value="DDR5">DDR5</option><option value="DDR4">DDR4</option></select></div>
+                    <div className="input-field"><label>速度</label><input type="text" placeholder="自動入力" value={p.speed} onChange={e=>u(c,'speed',e.target.value)} className={f(c,'speed')?'auto-filled':''}/></div>
+                    <div className="input-field"><label>容量</label><input type="text" placeholder="自動入力" value={p.capacity} onChange={e=>u(c,'capacity',e.target.value)} className={f(c,'capacity')?'auto-filled':''}/></div></>
+                )}],
+                ['gpu','🎮','グラフィックボード',{namePlaceholder:'NVIDIA GeForce RTX 4070 Ti',extraFields:(p,u,c,f)=>(
+                    <div className="input-field"><label>消費電力（W）</label><input type="number" placeholder="自動入力" value={p.power} onChange={e=>u(c,'power',e.target.value)} className={f(c,'power')?'auto-filled':''}/></div>
+                )}],
+                ['storage','💿','ストレージ',{namePlaceholder:'Samsung 980 PRO 1TB NVMe SSD',extraFields:(p,u,c,f)=>(
+                    <><div className="input-field"><label>タイプ</label><select value={p.type} onChange={e=>u(c,'type',e.target.value)} className={f(c,'type')?'auto-filled':''}>
+                        <option value="">選択</option><option value="M.2 NVMe SSD">M.2 NVMe SSD</option><option value="SATA SSD">SATA SSD</option><option value="HDD">HDD</option></select></div>
+                    <div className="input-field"><label>容量</label><input type="text" placeholder="自動入力" value={p.capacity} onChange={e=>u(c,'capacity',e.target.value)} className={f(c,'capacity')?'auto-filled':''}/></div></>
+                )}],
+                ['psu','⚡','電源ユニット',{namePlaceholder:'Corsair RM850x 850W Gold',extraFields:(p,u,c,f)=>(
+                    <><div className="input-field"><label>容量（W）</label><input type="number" placeholder="自動入力" value={p.wattage} onChange={e=>u(c,'wattage',e.target.value)} className={f(c,'wattage')?'auto-filled':''}/></div>
+                    <div className="input-field"><label>認証</label><select value={p.certification} onChange={e=>u(c,'certification',e.target.value)} className={f(c,'certification')?'auto-filled':''}>
+                        <option value="">選択</option><option value="80 PLUS Titanium">80 PLUS Titanium</option><option value="80 PLUS Platinum">80 PLUS Platinum</option>
+                        <option value="80 PLUS Gold">80 PLUS Gold</option><option value="80 PLUS Silver">80 PLUS Silver</option><option value="80 PLUS Bronze">80 PLUS Bronze</option></select></div></>
+                )}],
+                ['case','📦','PCケース',{namePlaceholder:'NZXT H7 Flow Mid Tower ATX',extraFields:(p,u,c,f)=>(
+                    <div className="input-field"><label>対応フォームファクター</label><select value={p.formFactor} onChange={e=>u(c,'formFactor',e.target.value)} className={f(c,'formFactor')?'auto-filled':''}>
+                        <option value="">選択</option><option value="Full Tower">Full Tower (ATX/E-ATX対応)</option><option value="Mid Tower">Mid Tower (ATX対応)</option>
+                        <option value="Mini Tower">Mini Tower (Micro-ATX対応)</option><option value="Small Form Factor">Small Form Factor (Mini-ITX対応)</option></select></div>
+                )}],
+                ['cooler','❄️','CPUクーラー',{namePlaceholder:'Noctua NH-D15 空冷',extraFields:(p,u,c,f)=>(
+                    <div className="input-field"><label>タイプ</label><select value={p.type} onChange={e=>u(c,'type',e.target.value)} className={f(c,'type')?'auto-filled':''}>
+                        <option value="">選択</option><option value="空冷">空冷</option><option value="簡易水冷">簡易水冷</option><option value="本格水冷">本格水冷</option></select></div>
+                )}],
+                ['os','💻','OS',{namePlaceholder:'Windows 11 Home DSP版',extraFields:(p,u,c,f)=>(
+                    <><div className="input-field"><label>エディション</label><select value={p.edition} onChange={e=>u(c,'edition',e.target.value)} className={f(c,'edition')?'auto-filled':''}>
+                        <option value="">選択</option><option value="Home">Home</option><option value="Pro">Pro</option></select></div>
+                    <div className="input-field"><label>ライセンス種類</label><select value={p.license} onChange={e=>u(c,'license',e.target.value)} className={f(c,'license')?'auto-filled':''}>
+                        <option value="">選択</option><option value="DSP版">DSP版</option><option value="パッケージ版">パッケージ版</option><option value="ダウンロード版">ダウンロード版</option></select></div></>
+                )}]
+            ];
+
+            return(
                 <div className="container">
-                    <div className="header">
-                        <h1>🖥️ 自作PCパーツ選定アプリ</h1>
-                        <p>🏷️ 型番入力→ボタンクリック→価格.com最安値を自動取得！</p>
-                    </div>
-
+                    <div className="header"><h1>🖥️ 自作PCパーツ選定アプリ</h1><p>🏷️ 型番入力→ボタンクリック→価格.com最安値を自動取得！</p></div>
                     <div className="content">
-                        {renderPartSection('cpu', '🔲', 'CPU', {
-                            namePlaceholder: 'Core i7-14700K',
-                            extraFields: (part, update, cat, isAutoFilled) => (
-                                <>
-                                    <div className="input-field">
-                                        <label>ソケット</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="自動入力"
-                                            value={part.socket}
-                                            onChange={(e) => update(cat, 'socket', e.target.value)}
-                                            className={isAutoFilled(cat, 'socket') ? 'auto-filled' : ''}
-                                        />
-                                    </div>
-                                    <div className="input-field">
-                                        <label>TDP（W）</label>
-                                        <input 
-                                            type="number" 
-                                            placeholder="自動入力"
-                                            value={part.tdp}
-                                            onChange={(e) => update(cat, 'tdp', e.target.value)}
-                                            className={isAutoFilled(cat, 'tdp') ? 'auto-filled' : ''}
-                                        />
-                                    </div>
-                                </>
-                            )
-                        })}
-
-                        {renderPartSection('motherboard', '🔌', 'マザーボード', {
-                            namePlaceholder: 'ASUS ROG STRIX Z790-E ATX',
-                            extraFields: (part, update, cat, isAutoFilled) => (
-                                <>
-                                    <div className="input-field">
-                                        <label>ソケット</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="自動入力"
-                                            value={part.socket}
-                                            onChange={(e) => update(cat, 'socket', e.target.value)}
-                                            className={isAutoFilled(cat, 'socket') ? 'auto-filled' : ''}
-                                        />
-                                    </div>
-                                    <div className="input-field">
-                                        <label>チップセット</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="自動入力"
-                                            value={part.chipset}
-                                            onChange={(e) => update(cat, 'chipset', e.target.value)}
-                                            className={isAutoFilled(cat, 'chipset') ? 'auto-filled' : ''}
-                                        />
-                                    </div>
-                                    <div className="input-field">
-                                        <label>フォームファクター</label>
-                                        <select 
-                                            value={part.formFactor}
-                                            onChange={(e) => update(cat, 'formFactor', e.target.value)}
-                                            className={isAutoFilled(cat, 'formFactor') ? 'auto-filled' : ''}
-                                        >
-                                            <option value="">選択</option>
-                                            <option value="ATX">ATX</option>
-                                            <option value="Micro-ATX">Micro-ATX</option>
-                                            <option value="Mini-ITX">Mini-ITX</option>
-                                            <option value="E-ATX">E-ATX</option>
-                                        </select>
-                                    </div>
-                                </>
-                            )
-                        })}
-
-                        {renderPartSection('memory', '💾', 'メモリ', {
-                            namePlaceholder: 'Corsair Vengeance DDR5 32GB 6000MHz',
-                            extraFields: (part, update, cat, isAutoFilled) => (
-                                <>
-                                    <div className="input-field">
-                                        <label>タイプ</label>
-                                        <select 
-                                            value={part.type}
-                                            onChange={(e) => update(cat, 'type', e.target.value)}
-                                            className={isAutoFilled(cat, 'type') ? 'auto-filled' : ''}
-                                        >
-                                            <option value="">選択</option>
-                                            <option value="DDR5">DDR5</option>
-                                            <option value="DDR4">DDR4</option>
-                                        </select>
-                                    </div>
-                                    <div className="input-field">
-                                        <label>速度</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="自動入力"
-                                            value={part.speed}
-                                            onChange={(e) => update(cat, 'speed', e.target.value)}
-                                            className={isAutoFilled(cat, 'speed') ? 'auto-filled' : ''}
-                                        />
-                                    </div>
-                                    <div className="input-field">
-                                        <label>容量</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="自動入力"
-                                            value={part.capacity}
-                                            onChange={(e) => update(cat, 'capacity', e.target.value)}
-                                            className={isAutoFilled(cat, 'capacity') ? 'auto-filled' : ''}
-                                        />
-                                    </div>
-                                </>
-                            )
-                        })}
-
-                        {renderPartSection('gpu', '🎮', 'グラフィックボード', {
-                            namePlaceholder: 'NVIDIA GeForce RTX 4070 Ti',
-                            extraFields: (part, update, cat, isAutoFilled) => (
-                                <div className="input-field">
-                                    <label>消費電力（W）</label>
-                                    <input 
-                                        type="number" 
-                                        placeholder="自動入力"
-                                        value={part.power}
-                                        onChange={(e) => update(cat, 'power', e.target.value)}
-                                        className={isAutoFilled(cat, 'power') ? 'auto-filled' : ''}
-                                    />
-                                </div>
-                            )
-                        })}
-
-                        {renderPartSection('storage', '💿', 'ストレージ', {
-                            namePlaceholder: 'Samsung 980 PRO 1TB NVMe SSD',
-                            extraFields: (part, update, cat, isAutoFilled) => (
-                                <>
-                                    <div className="input-field">
-                                        <label>タイプ</label>
-                                        <select 
-                                            value={part.type}
-                                            onChange={(e) => update(cat, 'type', e.target.value)}
-                                            className={isAutoFilled(cat, 'type') ? 'auto-filled' : ''}
-                                        >
-                                            <option value="">選択</option>
-                                            <option value="M.2 NVMe SSD">M.2 NVMe SSD</option>
-                                            <option value="SATA SSD">SATA SSD</option>
-                                            <option value="HDD">HDD</option>
-                                        </select>
-                                    </div>
-                                    <div className="input-field">
-                                        <label>容量</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="自動入力"
-                                            value={part.capacity}
-                                            onChange={(e) => update(cat, 'capacity', e.target.value)}
-                                            className={isAutoFilled(cat, 'capacity') ? 'auto-filled' : ''}
-                                        />
-                                    </div>
-                                </>
-                            )
-                        })}
-
-                        {renderPartSection('psu', '⚡', '電源ユニット', {
-                            namePlaceholder: 'Corsair RM850x 850W Gold',
-                            extraFields: (part, update, cat, isAutoFilled) => (
-                                <>
-                                    <div className="input-field">
-                                        <label>容量（W）</label>
-                                        <input 
-                                            type="number" 
-                                            placeholder="自動入力"
-                                            value={part.wattage}
-                                            onChange={(e) => update(cat, 'wattage', e.target.value)}
-                                            className={isAutoFilled(cat, 'wattage') ? 'auto-filled' : ''}
-                                        />
-                                    </div>
-                                    <div className="input-field">
-                                        <label>認証</label>
-                                        <select 
-                                            value={part.certification}
-                                            onChange={(e) => update(cat, 'certification', e.target.value)}
-                                            className={isAutoFilled(cat, 'certification') ? 'auto-filled' : ''}
-                                        >
-                                            <option value="">選択</option>
-                                            <option value="80 PLUS Titanium">80 PLUS Titanium</option>
-                                            <option value="80 PLUS Platinum">80 PLUS Platinum</option>
-                                            <option value="80 PLUS Gold">80 PLUS Gold</option>
-                                            <option value="80 PLUS Silver">80 PLUS Silver</option>
-                                            <option value="80 PLUS Bronze">80 PLUS Bronze</option>
-                                        </select>
-                                    </div>
-                                </>
-                            )
-                        })}
-
-                        {renderPartSection('case', '📦', 'PCケース', {
-                            namePlaceholder: 'NZXT H7 Flow Mid Tower ATX',
-                            extraFields: (part, update, cat, isAutoFilled) => (
-                                <div className="input-field">
-                                    <label>対応フォームファクター</label>
-                                    <select 
-                                        value={part.formFactor}
-                                        onChange={(e) => update(cat, 'formFactor', e.target.value)}
-                                        className={isAutoFilled(cat, 'formFactor') ? 'auto-filled' : ''}
-                                    >
-                                        <option value="">選択</option>
-                                        <option value="Full Tower">Full Tower (ATX/E-ATX対応)</option>
-                                        <option value="Mid Tower">Mid Tower (ATX対応)</option>
-                                        <option value="Mini Tower">Mini Tower (Micro-ATX対応)</option>
-                                        <option value="Small Form Factor">Small Form Factor (Mini-ITX対応)</option>
-                                    </select>
-                                </div>
-                            )
-                        })}
-
-                        {renderPartSection('cooler', '❄️', 'CPUクーラー', {
-                            namePlaceholder: 'Noctua NH-D15 空冷',
-                            extraFields: (part, update, cat, isAutoFilled) => (
-                                <div className="input-field">
-                                    <label>タイプ</label>
-                                    <select 
-                                        value={part.type}
-                                        onChange={(e) => update(cat, 'type', e.target.value)}
-                                        className={isAutoFilled(cat, 'type') ? 'auto-filled' : ''}
-                                    >
-                                        <option value="">選択</option>
-                                        <option value="空冷">空冷</option>
-                                        <option value="簡易水冷">簡易水冷</option>
-                                        <option value="本格水冷">本格水冷</option>
-                                    </select>
-                                </div>
-                            )
-                        })}
-
-                        {renderPartSection('os', '💻', 'OS（オペレーティングシステム）', {
-                            namePlaceholder: 'Windows 11 Home DSP版',
-                            extraFields: (part, update, cat, isAutoFilled) => (
-                                <>
-                                    <div className="input-field">
-                                        <label>エディション</label>
-                                        <select 
-                                            value={part.edition}
-                                            onChange={(e) => update(cat, 'edition', e.target.value)}
-                                            className={isAutoFilled(cat, 'edition') ? 'auto-filled' : ''}
-                                        >
-                                            <option value="">選択</option>
-                                            <option value="Home">Home</option>
-                                            <option value="Pro">Pro</option>
-                                        </select>
-                                    </div>
-                                    <div className="input-field">
-                                        <label>ライセンス種類</label>
-                                        <select 
-                                            value={part.license}
-                                            onChange={(e) => update(cat, 'license', e.target.value)}
-                                            className={isAutoFilled(cat, 'license') ? 'auto-filled' : ''}
-                                        >
-                                            <option value="">選択</option>
-                                            <option value="DSP版">DSP版</option>
-                                            <option value="パッケージ版">パッケージ版</option>
-                                            <option value="ダウンロード版">ダウンロード版</option>
-                                        </select>
-                                    </div>
-                                </>
-                            )
-                        })}
-
-                        {warnings.length > 0 && (
-                            <div className="warning">
-                                <div className="warning-title">⚠️ 互換性の確認が必要です</div>
-                                {warnings.map((warning, index) => (
-                                    <div key={index}>{warning}</div>
-                                ))}
-                            </div>
-                        )}
-
+                        {partConfigs.map(([cat,icon,title,cfg])=>renderPart(cat,icon,title,cfg))}
+                        {warnings.length>0&&<div className="warning"><div className="warning-title">⚠️ 互換性の確認が必要です</div>{warnings.map((w,i)=><div key={i}>{w}</div>)}</div>}
                         <div className="summary-section">
                             <div className="summary-header">📋 パーツ一覧</div>
-                            
-                            {Object.entries({
-                                cpu: 'CPU',
-                                motherboard: 'マザーボード',
-                                memory: 'メモリ',
-                                gpu: 'GPU',
-                                storage: 'ストレージ',
-                                psu: '電源',
-                                case: 'ケース',
-                                cooler: 'クーラー',
-                                os: 'OS'
-                            }).map(([key, label]) => 
-                                parts[key].name && (
-                                    <div key={key} className="summary-item">
-                                        <div className="summary-category">{label}</div>
-                                        <div className="summary-name">{parts[key].name}</div>
-                                        <div className="summary-price">
-                                            {parts[key].price ? `¥${parseFloat(parts[key].price).toLocaleString()}` : '-'}
-                                        </div>
-                                    </div>
-                                )
-                            )}
-                            
-                            <div className="total-section">
-                                <span className="total-label">合計金額:</span>
-                                <span className="total-amount">¥{calculateTotal().toLocaleString()}</span>
-                            </div>
+                            {Object.entries({cpu:'CPU',motherboard:'マザーボード',memory:'メモリ',gpu:'GPU',storage:'ストレージ',psu:'電源',case:'ケース',cooler:'クーラー',os:'OS'})
+                                .map(([k,l])=>parts[k].name&&<div key={k} className="summary-item"><div className="summary-category">{l}</div>
+                                <div className="summary-name">{parts[k].name}</div><div className="summary-price">{parts[k].price?`¥${parseFloat(parts[k].price).toLocaleString()}`:'-'}</div></div>)}
+                            <div className="total-section"><span className="total-label">合計金額:</span><span className="total-amount">¥{calcTotal().toLocaleString()}</span></div>
                         </div>
-
                         <div className="button-group">
-                            <button className="btn btn-primary" onClick={exportToText}>
-                                💾 テキストファイルで保存
-                            </button>
-                            <button className="btn btn-secondary" onClick={clearAll}>
-                                🗑️ すべてクリア
-                            </button>
+                            <button className="btn btn-primary" onClick={exportTxt}>💾 テキストファイルで保存</button>
+                            <button className="btn btn-secondary" onClick={clearAll}>🗑️ すべてクリア</button>
                         </div>
                     </div>
                 </div>
             );
         }
-
-        ReactDOM.render(<PCPartsSelector />, document.getElementById('root'));
+        ReactDOM.render(<PCPartsSelector/>,document.getElementById('root'));
     </script>
 </body>
 </html>
